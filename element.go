@@ -19,8 +19,8 @@ type width struct {
 }
 
 type element struct {
-	f flow
-	w width
+	flow  flow
+	width width
 
 	content string
 
@@ -28,7 +28,7 @@ type element struct {
 }
 
 func (e element) render(w int) (lines []string) {
-	width := e.w.value
+	width := e.width.value
 	if width == 0 {
 		width = w
 	}
@@ -77,7 +77,7 @@ func (e element) render(w int) (lines []string) {
 	}
 
 	// TODO(jpw): fix all these terribly short variable names...
-	if e.f == flowRow {
+	if e.flow == flowRow {
 		for _, childLines := range childrenLines {
 			for _, l := range childLines {
 				fmt.Printf("adding line (row) %v\n", strings.ReplaceAll(l, " ", "~"))
@@ -92,7 +92,7 @@ func (e element) render(w int) (lines []string) {
 			for childIndex, childLines := range childrenLines {
 				child := e.children[childIndex]
 
-				childWidth := child.w.value
+				childWidth := child.width.value
 				if childWidth == 0 {
 					// TODO: what if child is next to other elements with defined widths?
 					childWidth = width
@@ -104,7 +104,7 @@ func (e element) render(w int) (lines []string) {
 						line += strings.Repeat(" ", childWidth-monospaceLength(childLines[i]))
 					}
 				} else {
-					line += strings.Repeat(" ", child.w.value)
+					line += strings.Repeat(" ", child.width.value)
 				}
 			}
 
@@ -121,7 +121,7 @@ func (e element) render(w int) (lines []string) {
 }
 
 func (c element) String() string {
-	return fmt.Sprintf("<width=%v>%v</>", c.w.value, c.content)
+	return fmt.Sprintf("<width=%v>%v</>", c.width.value, c.content)
 }
 
 func monospaceLength(s string) int {

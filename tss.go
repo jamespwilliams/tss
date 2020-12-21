@@ -11,7 +11,7 @@ import (
 )
 
 type Template struct {
-	e element
+	rootElement element
 }
 
 func NewTemplate(tml io.Reader, tss io.Reader) (Template, error) {
@@ -42,13 +42,13 @@ func NewTemplate(tml io.Reader, tss io.Reader) (Template, error) {
 	rootNode := *f(rootElem)
 
 	return Template{
-		e: rootNode,
+		rootElement: rootNode,
 	}, nil
 }
 
 func (t Template) Render(w io.Writer) {
 	cols, _ := consolesize.GetConsoleSize()
-	res := t.e.render(cols)
+	res := t.rootElement.render(cols)
 	fmt.Fprint(w, strings.Join(res, "\n"))
 }
 
@@ -70,8 +70,8 @@ func convert(n *html.Node) element {
 	}
 
 	return element{
-		f: flow,
-		w: width{
+		flow: flow,
+		width: width{
 			value: w,
 		},
 		content: content,
