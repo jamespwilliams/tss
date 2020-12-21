@@ -63,6 +63,8 @@ func randSeq(n int) string {
 }
 ```
 
+![gif showing example of a basic TUI app created with tss](https://github.com/jamespwilliams/tss/raw/master/.assets/example.gif)
+
 ## TODOs
 
 - Background colors
