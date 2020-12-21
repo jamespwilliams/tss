@@ -58,5 +58,5 @@ func NewTemplate(tml io.Reader, tss io.Reader) (Template, error) {
 func (t Template) Render(w io.Writer) {
 	cols, _ := consolesize.GetConsoleSize()
 	res := t.rootElement.render(cols)
-	fmt.Fprint(w, strings.Join(res, "\n"))
+	fmt.Fprint(w, strings.Join(res, "\n")+"\n")
 }

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"unicode/utf8"
 
 	"golang.org/x/net/html"
 )
@@ -22,8 +21,9 @@ type width struct {
 }
 
 type element struct {
-	flow  flow
-	width width
+	flow   flow
+	width  width
+	border bool
 
 	content string
 
@@ -36,6 +36,9 @@ func parseElement(node *html.Node) (element, error) {
 	if flowAttr == "row" {
 		flow = flowRow
 	}
+
+	border := hasAttribute(node, "border")
+	fmt.Println(border)
 
 	w := 0
 	if widthAttr := getAttributeValue(node, "width"); widthAttr != "" {
@@ -56,6 +59,7 @@ func parseElement(node *html.Node) (element, error) {
 			value: w,
 		},
 		content: content,
+		border:  border,
 	}, nil
 }
 
@@ -69,23 +73,29 @@ func getAttributeValue(node *html.Node, key string) string {
 	return ""
 }
 
-func (e element) render(w int) (lines []string) {
-	width := e.width.value
-	if width == 0 {
-		width = w
+func hasAttribute(node *html.Node, key string) bool {
+	for _, a := range node.Attr {
+		if a.Key == key {
+			return true
+		}
 	}
 
-	width -= 2
-	defer func() {
-		var res []string
-		res = append(res, "┌"+strings.Repeat("─", width)+"┐")
-		fmt.Println("added            ", res[len(res)-1])
-		fmt.Println(width)
-		for _, line := range lines {
-			res = append(res, "│"+line+"│")
+	return false
+}
+
+func (e element) render(w int) (lines []string) {
+	width := e.innerWidth()
+	if width == 0 {
+		width = w
+		if e.border {
+			width -= 2
 		}
-		res = append(res, "└"+strings.Repeat("─", width)+"┘")
-		lines = res
+	}
+
+	defer func() {
+		if e.border {
+			lines = addBorder(lines, width)
+		}
 		return
 	}()
 
@@ -118,7 +128,6 @@ func (e element) render(w int) (lines []string) {
 		}
 	}
 
-	// TODO(jpw): fix all these terribly short variable names...
 	if e.flow == flowRow {
 		for _, childLines := range childrenLines {
 			for _, l := range childLines {
@@ -134,7 +143,7 @@ func (e element) render(w int) (lines []string) {
 			for childIndex, childLines := range childrenLines {
 				child := e.children[childIndex]
 
-				childWidth := child.width.value
+				childWidth := child.totalWidth()
 				if childWidth == 0 {
 					// TODO: what if child is next to other elements with defined widths?
 					childWidth = width
@@ -146,7 +155,7 @@ func (e element) render(w int) (lines []string) {
 						line += strings.Repeat(" ", childWidth-monospaceLength(childLines[i]))
 					}
 				} else {
-					line += strings.Repeat(" ", child.width.value)
+					line += strings.Repeat(" ", childWidth)
 				}
 			}
 
@@ -162,10 +171,18 @@ func (e element) render(w int) (lines []string) {
 	return lines
 }
 
-func (c element) String() string {
-	return fmt.Sprintf("<width=%v>%v</>", c.width.value, c.content)
+func (c element) totalWidth() int {
+	if c.border {
+		return c.width.value + 2
+	}
+
+	return c.width.value
 }
 
-func monospaceLength(s string) int {
-	return utf8.RuneCountInString(s)
+func (c element) innerWidth() int {
+	return c.width.value
+}
+
+func (c element) String() string {
+	return fmt.Sprintf("<width=%v>%v</>", c.width.value, c.content)
 }
