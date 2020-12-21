@@ -194,12 +194,11 @@ func (c Element) innerWidth() int {
 }
 
 func (c *Element) SetContent(content string) {
-	for _, child := range c.children {
-		if child.isContentNode {
-			child.content = content
-			return
-		}
-	}
+	c.children = []*Element{&Element{
+		width:         &width{},
+		content:       content,
+		isContentNode: true,
+	}}
 }
 
 func (c *Element) SetWidth(width int) {
