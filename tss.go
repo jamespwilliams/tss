@@ -1,6 +1,7 @@
 package tss
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"strings"
@@ -64,4 +65,13 @@ func (t Template) Render(w io.Writer) {
 	cols, _ := consolesize.GetConsoleSize()
 	res := t.rootElement.render(cols)
 	fmt.Fprint(w, strings.Join(res, "\n")+"\n")
+}
+
+func (t Template) RenderFullScreen(w io.Writer) {
+	cols, rows := consolesize.GetConsoleSize()
+	res := t.rootElement.render(cols)
+
+	b := bufio.NewWriter(w)
+	defer b.Flush()
+	b.Write([]byte(strings.Join(res, "\n") + strings.Repeat("\n", rows-len(res))))
 }
