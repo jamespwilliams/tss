@@ -2,8 +2,11 @@ package tss
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"unicode/utf8"
+
+	"golang.org/x/net/html"
 )
 
 type flow int
@@ -25,6 +28,45 @@ type element struct {
 	content string
 
 	children []element
+}
+
+func parseElement(node *html.Node) (element, error) {
+	flowAttr := getAttributeValue(node, "flow")
+	flow := flowColumn
+	if flowAttr == "row" {
+		flow = flowRow
+	}
+
+	w := 0
+	if widthAttr := getAttributeValue(node, "width"); widthAttr != "" {
+		var err error
+		if w, err = strconv.Atoi(widthAttr); err != nil {
+			return element{}, fmt.Errorf("failed to parse width attribute: %w", err)
+		}
+	}
+
+	var content string
+	if node.Type == html.TextNode {
+		content = strings.TrimSpace(node.Data)
+	}
+
+	return element{
+		flow: flow,
+		width: width{
+			value: w,
+		},
+		content: content,
+	}, nil
+}
+
+func getAttributeValue(node *html.Node, key string) string {
+	for _, a := range node.Attr {
+		if a.Key == key {
+			return a.Val
+		}
+	}
+
+	return ""
 }
 
 func (e element) render(w int) (lines []string) {
