@@ -20,17 +20,21 @@ type width struct {
 	isPercent bool
 }
 
-type element struct {
+type Element struct {
+	id string
+
 	flow   flow
 	width  width
 	border bool
 
 	content string
 
-	children []element
+	children []*Element
 }
 
-func parseElement(node *html.Node) (element, error) {
+func parseElement(node *html.Node) (Element, error) {
+	id := getAttributeValue(node, "id")
+
 	flowAttr := getAttributeValue(node, "flow")
 	flow := flowColumn
 	if flowAttr == "row" {
@@ -38,13 +42,13 @@ func parseElement(node *html.Node) (element, error) {
 	}
 
 	border := hasAttribute(node, "border")
-	fmt.Println(border)
+	// fmt.Println(border)
 
 	w := 0
 	if widthAttr := getAttributeValue(node, "width"); widthAttr != "" {
 		var err error
 		if w, err = strconv.Atoi(widthAttr); err != nil {
-			return element{}, fmt.Errorf("failed to parse width attribute: %w", err)
+			return Element{}, fmt.Errorf("failed to parse width attribute: %w", err)
 		}
 	}
 
@@ -53,7 +57,8 @@ func parseElement(node *html.Node) (element, error) {
 		content = strings.TrimSpace(node.Data)
 	}
 
-	return element{
+	return Element{
+		id:   id,
 		flow: flow,
 		width: width{
 			value: w,
@@ -83,7 +88,7 @@ func hasAttribute(node *html.Node, key string) bool {
 	return false
 }
 
-func (e element) render(w int) (lines []string) {
+func (e Element) render(w int) (lines []string) {
 	width := e.innerWidth()
 	if width == 0 {
 		width = w
@@ -131,7 +136,7 @@ func (e element) render(w int) (lines []string) {
 	if e.flow == flowRow {
 		for _, childLines := range childrenLines {
 			for _, l := range childLines {
-				fmt.Printf("adding line (row) %v\n", strings.ReplaceAll(l, " ", "~"))
+				// fmt.Printf("adding line (row) %v\n", strings.ReplaceAll(l, " ", "~"))
 
 				lines = append(lines, l)
 			}
@@ -145,7 +150,7 @@ func (e element) render(w int) (lines []string) {
 
 				childWidth := child.totalWidth()
 				if childWidth == 0 {
-					// TODO: what if child is next to other elements with defined widths?
+					// TODO: what if child is next to other Elements with defined widths?
 					childWidth = width
 				}
 
@@ -162,7 +167,7 @@ func (e element) render(w int) (lines []string) {
 			if monospaceLength(line) < width {
 				line += strings.Repeat(" ", width-monospaceLength(line))
 			}
-			fmt.Printf("adding line (col) %v\n", strings.ReplaceAll(line, " ", "~"))
+			// fmt.Printf("adding line (col) %v\n", strings.ReplaceAll(line, " ", "~"))
 
 			lines = append(lines, line)
 		}
@@ -171,7 +176,7 @@ func (e element) render(w int) (lines []string) {
 	return lines
 }
 
-func (c element) totalWidth() int {
+func (c Element) totalWidth() int {
 	if c.border {
 		return c.width.value + 2
 	}
@@ -179,10 +184,14 @@ func (c element) totalWidth() int {
 	return c.width.value
 }
 
-func (c element) innerWidth() int {
+func (c Element) innerWidth() int {
 	return c.width.value
 }
 
-func (c element) String() string {
+func (c *Element) SetContent(content string) {
+	c.content = content
+}
+
+func (c Element) String() string {
 	return fmt.Sprintf("<width=%v>%v</>", c.width.value, c.content)
 }
