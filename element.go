@@ -18,17 +18,17 @@ type width struct {
 	isPercent bool
 }
 
-type node struct {
+type element struct {
 	f flow
 	w width
 
 	content string
 
-	children []node
+	children []element
 }
 
-func (n node) render(w int) (lines []string) {
-	width := n.w.value
+func (e element) render(w int) (lines []string) {
+	width := e.w.value
 	if width == 0 {
 		width = w
 	}
@@ -47,15 +47,15 @@ func (n node) render(w int) (lines []string) {
 		return
 	}()
 
-	if n.content != "" {
+	if e.content != "" {
 		// TODO: this would probably be cleaner if this case was a separate type, like textNode or similar
-		for start := 0; start < len(n.content); start += width {
+		for start := 0; start < len(e.content); start += width {
 			end := start + width
-			if end >= len(n.content) {
-				end = len(n.content)
+			if end >= len(e.content) {
+				end = len(e.content)
 			}
 
-			lines = append(lines, n.content[start:end])
+			lines = append(lines, e.content[start:end])
 		}
 
 		lastLine := lines[len(lines)-1]
@@ -67,7 +67,7 @@ func (n node) render(w int) (lines []string) {
 	var childrenLines [][]string
 	var longestChildLength int
 
-	for _, child := range n.children {
+	for _, child := range e.children {
 		lines := child.render(width)
 		childrenLines = append(childrenLines, lines)
 
@@ -77,7 +77,7 @@ func (n node) render(w int) (lines []string) {
 	}
 
 	// TODO(jpw): fix all these terribly short variable names...
-	if n.f == flowRow {
+	if e.f == flowRow {
 		for _, childLines := range childrenLines {
 			for _, l := range childLines {
 				fmt.Printf("adding line (row) %v\n", strings.ReplaceAll(l, " ", "~"))
@@ -90,7 +90,7 @@ func (n node) render(w int) (lines []string) {
 		for i := 0; i < longestChildLength; i++ {
 			var line string
 			for childIndex, childLines := range childrenLines {
-				child := n.children[childIndex]
+				child := e.children[childIndex]
 
 				childWidth := child.w.value
 				if childWidth == 0 {
@@ -120,7 +120,7 @@ func (n node) render(w int) (lines []string) {
 	return lines
 }
 
-func (c node) String() string {
+func (c element) String() string {
 	return fmt.Sprintf("<width=%v>%v</>", c.w.value, c.content)
 }
 

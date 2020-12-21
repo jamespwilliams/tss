@@ -11,7 +11,7 @@ import (
 )
 
 type Template struct {
-	n node
+	e element
 }
 
 func NewTemplate(tml io.Reader, tss io.Reader) (Template, error) {
@@ -22,8 +22,8 @@ func NewTemplate(tml io.Reader, tss io.Reader) (Template, error) {
 
 	rootElem := h.FirstChild.LastChild.FirstChild
 
-	var f func(*html.Node) *node
-	f = func(htmlNode *html.Node) *node {
+	var f func(*html.Node) *element
+	f = func(htmlNode *html.Node) *element {
 		if htmlNode.Type == html.TextNode && strings.TrimSpace(htmlNode.Data) == "" {
 			return nil
 		}
@@ -42,17 +42,17 @@ func NewTemplate(tml io.Reader, tss io.Reader) (Template, error) {
 	rootNode := *f(rootElem)
 
 	return Template{
-		n: rootNode,
+		e: rootNode,
 	}, nil
 }
 
 func (t Template) Render(w io.Writer) {
 	cols, _ := consolesize.GetConsoleSize()
-	res := t.n.render(cols)
+	res := t.e.render(cols)
 	fmt.Fprint(w, strings.Join(res, "\n"))
 }
 
-func convert(n *html.Node) node {
+func convert(n *html.Node) element {
 	widthAttr := getAttributeValue(n, "width")
 	flowAttr := getAttributeValue(n, "flow")
 
@@ -69,7 +69,7 @@ func convert(n *html.Node) node {
 		content = strings.TrimSpace(n.Data)
 	}
 
-	return node{
+	return element{
 		f: flow,
 		w: width{
 			value: w,
