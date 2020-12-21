@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"strings"
 
 	"github.com/jamespwilliams/tss"
@@ -26,5 +27,5 @@ func main() {
 		</div>`)
 
 	t, _ := tss.NewTemplate(s, nil)
-	t.Print()
+	t.Render(os.Stdout)
 }

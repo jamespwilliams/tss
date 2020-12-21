@@ -20,13 +20,10 @@ func NewTemplate(tml io.Reader, tss io.Reader) (Template, error) {
 		panic(err)
 	}
 
-	// TODO(jpw) fix this hack:
 	rootElem := h.FirstChild.LastChild.FirstChild
 
 	var f func(*html.Node) *node
 	f = func(htmlNode *html.Node) *node {
-		// fmt.Println("htmlNode: ", htmlNode.Type, htmlNode.Data, htmlNode.DataAtom)
-
 		if htmlNode.Type == html.TextNode && strings.TrimSpace(htmlNode.Data) == "" {
 			return nil
 		}
@@ -49,15 +46,10 @@ func NewTemplate(tml io.Reader, tss io.Reader) (Template, error) {
 	}, nil
 }
 
-func (t Template) Print() {
-	// try and print something with the width of the terminal:
+func (t Template) Render(w io.Writer) {
 	cols, _ := consolesize.GetConsoleSize()
-	for i := 0; i < cols; i++ {
-		fmt.Print("=")
-	}
-
 	res := t.n.render(cols)
-	fmt.Println(strings.Join(res, "\n"))
+	fmt.Fprint(w, strings.Join(res, "\n"))
 }
 
 func convert(n *html.Node) node {
