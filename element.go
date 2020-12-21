@@ -24,10 +24,11 @@ type Element struct {
 	id string
 
 	flow   flow
-	width  width
+	width  *width
 	border bool
 
-	content string
+	isContentNode bool
+	content       string
 
 	children []*Element
 }
@@ -52,19 +53,23 @@ func parseElement(node *html.Node) (Element, error) {
 		}
 	}
 
+	// TODO: make a subtype:
 	var content string
+	var isContentNode bool
 	if node.Type == html.TextNode {
 		content = strings.TrimSpace(node.Data)
+		isContentNode = true
 	}
 
 	return Element{
 		id:   id,
 		flow: flow,
-		width: width{
+		width: &width{
 			value: w,
 		},
-		content: content,
-		border:  border,
+		content:       content,
+		isContentNode: isContentNode,
+		border:        border,
 	}, nil
 }
 
@@ -189,7 +194,16 @@ func (c Element) innerWidth() int {
 }
 
 func (c *Element) SetContent(content string) {
-	c.content = content
+	for _, child := range c.children {
+		if child.isContentNode {
+			child.content = content
+			return
+		}
+	}
+}
+
+func (c *Element) SetWidth(width int) {
+	c.width.value = width
 }
 
 func (c Element) String() string {

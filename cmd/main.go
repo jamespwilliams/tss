@@ -55,8 +55,10 @@ func main() {
 	for {
 		t.RenderFullScreen(os.Stdout)
 
+		size := rand.Intn(25)
 		elem := t.Elements["two"]
-		elem.SetContent(randSeq(12))
+		elem.SetContent(randSeq(size))
+		elem.SetWidth(size)
 
 		time.Sleep(1 * time.Second)
 	}
